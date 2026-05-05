@@ -35,5 +35,8 @@ if bashio::config.exists 'trusted_frame_origins'; then
   fi
 fi
 
+# Caddy im Hintergrund starten
+caddy run --config /etc/caddy/Caddyfile &
+
 bashio::log.info 'Start Bambuddy ...'
 uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --loop asyncio
