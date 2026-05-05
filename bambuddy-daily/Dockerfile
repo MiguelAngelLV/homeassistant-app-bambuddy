@@ -11,6 +11,7 @@ RUN apk add --no-cache \
   build-base \
   py3-opencv \
   curl \
+  caddy \
   ffmpeg
 
 # Install Python dependencies with cache mount
