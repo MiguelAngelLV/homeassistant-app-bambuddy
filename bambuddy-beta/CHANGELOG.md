@@ -1,121 +1,147 @@
-## 0.2.4b1
+## 0.2.4b2
 
-**Bambuddy v0.2.4b1**
+  **Bambuddy v0.2.4b2**
 
-First beta of the 0.2.4 cycle. The headline is two long-running gaps closed at once: server-side slicing means you can now slice STL/3MF files inside Bambuddy without a desktop slicer installed, and a full MakerWorld integration means you can browse, search, and one-click "Import & Print" any MakerWorld model directly from the app. Together they remove the last reasons many LAN-only users kept the Bambu Handy app installed.
+  The post-b1 polish cycle. The headline is Forecast & Reorder Intelligence — a new tab in the Inventory page that analyses your print history, projects stock runout dates per material/brand/subtype, and surfaces a shopping-list workflow. Two long-tail user pain points also closed: spool label printing (PDF in four sizes, including AMS-holder and Avery sheets) and Virtual Printer non-proxy modes now mirror the live target-printer state to the slicer (AMS configuration, FTS routing, camera, and k-profile lookup all work from BambuStudio / OrcaSlicer without proxy mode). On top of those, ~30 fixes — most notably a silent backup-restore data-loss bug (#1211 / #668), an archive-3MF file-deletion bug introduced by recent dispatch changes (#1212), and a string of VP / queue / scheduler edge cases.
 
-**Upgrade Notes — Read Before Updating**
+  **Upgrade Notes — Read Before Updating**
 
-⚠ **Native install users on 0.2.3.x: the in-app *Apply Update* button cannot install 0.2.4b1.** The 0.2.3.x updater is hardcoded to `git fetch origin main && git reset --hard origin/main`, but 0.2.4b1 lives on its own branch — main is still at 0.2.3.2 — so clicking *Apply Update* appears to succeed while actually leaving you on 0.2.3.2. Use one of the explicit branch-aware paths below instead. **0.2.4b1 itself fixes this**: once you're on 0.2.4b1, the in-app updater resolves the target tag from the GitHub releases API (respecting `include_beta_updates`), fetches it with `--tags`, and resets to the tag — so future betas will be installable directly from the GUI.
+  If you're already on **0.2.4b1**, the in-app *Apply Update* button
+  in Settings → System → Updates can install b2 directly — b1's updater
+  resolves the target tag from the GitHub releases API and respects
+  `include_beta_updates`. The 0.2.3.x updater can't (it's hardcoded to
+  `origin/main`), so 0.2.3.x → b2 still needs the explicit branch path
+  documented in the b1 release notes.
 
-Make a backup before upgrading via Settings → Backup → Create Backup. Native install with `update.sh` snapshots the database automatically and rolls back on failure.
+  Make a backup before upgrading via Settings → Backup → Create Backup.
+  Native install with `update.sh` snapshots the database automatically
+  and rolls back on failure.
 
-**Docker**
+  **Docker**
 
-Make sure your `docker-compose.yml` `image:` line points at `:0.2.4b1` (or `:beta` for the rolling beta tag).
+  Make sure your `docker-compose.yml` `image:` line points at `:0.2.4b2`
+  (or `:beta` for the rolling beta tag).
 
-```
-docker compose pull
-docker compose up -d
-```
+  docker compose pull
+  docker compose up -d
 
-**Native install — recommended path (branch override on `update.sh`)**
+  **Native install — recommended path**
 
-```
-sudo BRANCH=0.2.4b1 /opt/bambuddy/install/update.sh
-```
+  sudo BRANCH=0.2.4b2 /opt/bambuddy/install/update.sh
 
-The `BRANCH=` env var tells `update.sh` to pull `origin/0.2.4b1` instead of `origin/main`. The script handles backup, service stop/start, pip install, and frontend build with the correct working directory.
+  The `BRANCH=` env var tells `update.sh` to pull `origin/0.2.4b2`
+  instead of `origin/main`. The script handles backup, service
+  stop/start, pip install, and frontend build with the correct
+  working directory.
 
-**Native install — manual path (if `update.sh` isn't available)**
+  **Native install — manual path**
 
-```
-sudo systemctl stop bambuddy
-cd /opt/bambuddy
-sudo -u bambuddy git fetch origin
-sudo -u bambuddy git checkout 0.2.4b1
-sudo /opt/bambuddy/venv/bin/pip install -r requirements.txt
-sudo systemctl start bambuddy
-```
+  sudo systemctl stop bambuddy
+  cd /opt/bambuddy
+  sudo -u bambuddy git fetch origin
+  sudo -u bambuddy git checkout 0.2.4b2
+  sudo /opt/bambuddy/venv/bin/pip install -r requirements.txt
+  sudo systemctl start bambuddy
 
-The new Slicer API sidecar is **opt-in** — if you don't run the `slicer-api/` Compose stack, the existing "open in desktop slicer" flow is unchanged. See the wiki for setup.
+  The new Forecast tab adds two columns to `filament_sku_settings` and two new tables (`filament_shopping_list`, plus stock-alert columns on `notification_providers`); migrations are idempotent and run automatically on startup. Existing groups with `inventory:read` / `inventory:update` are auto-granted the new `inventory:forecast_read` / `inventory:forecast_write` permissions
+  on first start, so existing users aren't locked out of the tab.
 
----
+  ---
 
-**Highlights**
+  **Highlights**
 
-- **Server-side slicing via OrcaSlicer / Bambu Studio sidecar** — Bring up the optional `slicer-api/` Compose stack and the new *Slice* button in File Manager, Archives, and MakerWorld dispatches a background slice job whose result lands as a new `.gcode.3mf` with embedded thumbnail. Multi-plate 3MFs open a plate picker first; multi-color plates render one filament dropdown per AMS slot, each pre-picked against your imported / cloud / standard presets by type and colour match. Live progress in a persistent toast that follows you across pages. Falls back to embedded settings when the CLI's `--load-settings` path misbehaves (notably OrcaSlicer + H2D). Works alongside — does not replace — the existing desktop-slicer integration.
-- **MakerWorld Integration** — Paste any MakerWorld model URL or search the catalog and one-click *Import to Library* or *Print Now*. Per-plate picker with *Save* or *Save & Slice*, *Import all plates* for multi-plate models, image lightbox, Recent imports sidebar, and per-plate delete. Reuses your existing Bambu Cloud login — no separate account, no companion browser extension, no cookie paste. HTML descriptions are sanitised via DOMPurify and CDN images are proxied through Bambuddy so your IP stays private.
-- **Tailscale integration for virtual printers** (builds on [#1070](https://github.com/maziggy/bambuddy/issues/1070) by @legend813) — Opt-in per virtual printer: bring each VP into your tailnet for private remote access over WireGuard without port forwarding. Docker image now ships the Tailscale CLI pre-installed. Per-VP FQDN, copy-button, status indicator, opt-out toggle.
-- **Slicer presets unified across Cloud, imported, and bundled tiers** — The new Slice modal's preset dropdowns merge presets from Bambu Cloud (cloud-synced), local imports (`.orca_filament`, `.bbscfg`, `.bbsflmt`, `.zip`, `.json`), and the slicer's own bundled `BBL/` profiles into one ranked list, pre-selected by type and colour match. Cloud-only and local-only setups both work.
-- **Enhanced filament colour handling: multi-colour gradients, transparency, visual effects** ([#1154](https://github.com/maziggy/bambuddy/issues/1154)) — The Spool form's *Colour* section now accepts a paste of up to 8 comma-separated hex stops (e.g. `EC984C,#6CD4BC,A66EB9,D87694` from 3dfilamentprofiles.com) and renders them as a CSS gradient on every swatch site. New *Effect* dropdown (Sparkle / Wood / Marble / Glow / Matte / Silk / Galaxy / Rainbow / Metal / Translucent / Gradient / Dual Color / Tri Color / Multicolor). Transparency is now actually visible — alpha < `0xFF` shows through a checkerboard layer beneath the colour layer. Multicolor subtype renders as a colour-wheel pie. Same fields are editable on the Color Catalog admin.
+  - **Virtual Printer non-proxy modes mirror the live target printer to the slicer** ([#1193](https://github.com/maziggy/bambuddy/issues/1193) follow-up) — Until now, Immediate / Review / Print Queue VPs looked like a stub Bambu Lab printer to the slicer: AMS dropdowns were empty, no live state, no camera, no per-filament k-profile lookup. The user could send a sliced file and that was it. Now the VP fans out the **target printer's live MQTT state** to the slicer (AMS units, FTS / dual-extruder routing, nozzle, temps, k-profiles, AMS load / dry / calibration commands) and proxies the **camera RTSPS stream** on port 322 — so the slicer treats the VP as a fully-functional Bambu printer while Bambuddy's queue / archive / dispatch features stay in the loop. Shares Bambuddy's existing per-printer MQTT subscription (no second session on the printer — firmware in-flight budget unaffected). Tested e2e with both BambuStudio and OrcaSlicer against H2D (dual-nozzle, AMS 2 Pro + AMS HT) and X1C (single-nozzle, AMS) across all three non-proxy modes. Setup nuance: for the slicer's RTSPS camera path to authenticate, the VP's access code must match the target printer's access code — one-time configuration step. Proxy mode is unaffected and continues to use its existing dedicated MQTT/FTP/RTSP/Bind/Aux proxies.
 
-**New Features**
+  - **Forecast & Reorder Intelligence** ([#1184](https://github.com/maziggy/bambuddy/pull/1184), contributed by @Keybored02) — A new *Forecast* tab on the Inventory page. The panel groups your spools by material / brand / subtype, computes a daily-consumption rate from the print-event history (exponentially weighted with a 30-day half-life so recent prints dominate; falls back to a delta calculation when only one print event exists), and projects per-SKU stock runout dates. Each row has a configurable lead time and safety margin (in days or grams), with the global lead time acting as a floor. Two alert tiers — *Reorder Now* (stock has dropped below the reorder point) and *Stock Break Risk* (stock will run out before reorder arrives) — surface in a collapsible banner above the table. A new shopping-list panel lets you add by quantity or by *days of stock desired* (auto-converted from the daily rate), with status badges (pending / ordered / received) and an inline urgency indicator. Per-SKU alert snooze for materials being intentionally wound down. All gated by two new permissions (`inventory:forecast_read` / `inventory:forecast_write`) with a backward-compat policy that auto-grants them to existing groups. i18n across all 8 locales.
 
-- **Library Trash Bin + Admin Bulk Purge + Auto-Purge** ([#1008](https://github.com/maziggy/bambuddy/issues/1008)) — Deleted library files now move to a trash bin with a configurable retention window (default 30 days) before a background sweeper permanently removes them. Admins also get a *Purge old* bulk action with a live preview (count + total size freed + sample filenames) and an opt-in *Auto-purge* schedule that runs once per 24 h. Gated by a new `library:purge` permission.
-- **Long-lived camera-stream tokens for HA / Frigate / kiosks** ([#1108](https://github.com/maziggy/bambuddy/issues/1108)) — Generate a stable, long-lived token in Settings → Cameras and wire it into Home Assistant, Frigate, or any wall-mounted kiosk without dealing with rotating session cookies.
-- **Per-spool category + low-stock threshold override** ([#729](https://github.com/maziggy/bambuddy/issues/729)) — Tag any spool with a custom category (e.g. *prototyping* / *production*) and override the global low-stock threshold per spool.
-- **Per-event ntfy priority** ([#990](https://github.com/maziggy/bambuddy/issues/990)) — Configure ntfy priority headers per event type so print-failure pings come through with a louder alert than print-finished.
-- **Project URL + cover photo** ([#1155](https://github.com/maziggy/bambuddy/issues/1155)) — Paste a MakerWorld / Printables / Thingiverse link and upload a hero image so each project card is visually identifiable; the URL renders as a one-click external-link button beside the project name.
-- **"Not Printed" / "Printed" collections on the Archives page** ([#1153](https://github.com/maziggy/bambuddy/issues/1153)) — Quick filter chips at the top of the Archives view to triage uploaded-but-never-printed files vs the printed catalog.
-- **Virtual-printer archive name source toggle** ([#1152](https://github.com/maziggy/bambuddy/issues/1152)) — Choose whether VP-received prints use the embedded 3MF metadata title or the original filename for archive naming.
-- **Per-request trace IDs in logs + `X-Trace-Id` response header** — Every HTTP request gets a unique trace ID written across the access log, all application log lines for that request, and an `X-Trace-Id` response header. Makes diagnosing rogue server-state changes and cross-component bugs significantly easier.
-- **OIDC Azure Entra ID support — configurable email claim & verification + Remember Me** ([#1126](https://github.com/maziggy/bambuddy/issues/1126), contributed by @netscout2001) — Configurable `email_claim` for SSO providers that don't use the standard claim, optional `require_email_verified` enforcement, and a Remember Me toggle for persistent login.
-- **MakerWorld URL-paste resolver shows printer per plate instance** — Plate picker now shows which printer each plate was sliced for so you don't accidentally pick an X1C plate on a P1S.
+  - **Spool label printing** ([#809](https://github.com/maziggy/bambuddy/issues/809)) — A per-spool *Print label* button on every Inventory card and a *Print labels (N)* header action that prints labels for the currently filtered view. Generates a PDF in one of four fixed sizes — AMS holder (30×15 mm) for the popular Makerworld AMS Filament Label Holder, single box label (62×29 mm) for Brother PT/QL or Dymo small labels, Avery L7160 for A4 sheet stock (38.1×63.5 mm × 21 per page), and Avery 5160 for US Letter sheet stock (25.4×66.7 mm × 30 per page). Each label shows a colour swatch (with multi-colour gradient stripes for spools that have `extra_colors` set), brand + material, the spool's own name, the spool ID — the field originally requested for "find spool 7 in my closet" identification — and a QR code that deep-links to `/inventory?spool=<id>` so a phone scan jumps straight back to that
+  spool's row. The box-size template additionally surfaces the storage-location field. Pure-Python ReportLab renderer — no headless browser, no system libs. Both local and Spoolman-backed inventories supported.
 
-**Improved**
 
-- **AMS slot "Assign to inventory spool" picker now lists every spool, including RFID-tagged Bambu Lab ones** ([#1133](https://github.com/maziggy/bambuddy/issues/1133)) — Previously the picker hid RFID-matched spools as "already assigned"; it now lists every spool with a clear assignment-state indicator.
-- **Inventory: "Delete Tag" button renamed to "Clear RFID Tag"** ([#729](https://github.com/maziggy/bambuddy/issues/729) follow-up) — Less ambiguous than "Delete".
-- **Nozzle icon on the dual-nozzle status card** ([#1115](https://github.com/maziggy/bambuddy/issues/1115)) — Visual indicator when a printer has two nozzles configured.
-- **Settings page is now permission-gated, not admin-only** — Granular permissions can grant individual settings sections without granting full admin.
-- **Background-dispatch toast no longer reads as "frozen at 100 %" for fast uploads** — Progress bar handles sub-second uploads without leaving a misleading "stuck" state.
-- **SpoolBuddy kiosk: "Plate ready" pills under the printer status badges** — At-a-glance signal that a plate needs clearing.
-- **SpoolBuddy kiosk no longer surfaces main-app toasts** — Operator notifications stay in the main app where they belong.
+  **New Features**
 
-**Fixed**
+  - **AMS slot Load / Unload from the printer card** ([#891](https://github.com/maziggy/bambuddy/issues/891), reported by @NNeerr00, +1 from @cadtoolbox) — The MQTT primitives for "load filament from a tray" and "unload the currently loaded tray" already existed in the codebase but were unused — there was no HTTP route and no UI, so every Load / Unload had to happen on the printer touchscreen, and external-spool users on dual-nozzle H2D had no way to drive Ext-R from the desktop at all. Now the AMS slot popover (the one with *Re-read RFID*) gains *Load* and *Unload* entries, and the external-spool slot — which had no popover at all before — gets one with the same entries. On dual-nozzle H2D each external slot drives its own extruder. Hidden while the printer is `RUNNING`, gated on `Permission.PRINTERS_CONTROL`.
 
-- **In-app upgrade clobbered SSH `origin` on developer checkouts** — The updater unconditionally rewrote `origin` to HTTPS before fetching, on the assumption that systemd service users wouldn't have SSH keys. That assumption clobbered any developer's SSH origin the moment they tested the upgrade flow against their own checkout, and the next `git push` would prompt for HTTPS credentials. The updater now reads the current origin first and only rewrites if it doesn't already point at `maziggy/bambuddy` (parsing both SSH and HTTPS forms with or without `.git`). Native installs with no remote set, or origins pointing at a fork, still get reset to the canonical HTTPS URL.
-- **Native-install in-app upgrade silently skipped `pip install`** — On a native install, the in-app *Apply Update* button got the new code in via `git reset --hard origin/main` but then logged `Could not open requirements file: 'requirements.txt'` and continued without installing the new deps. Pip was running with `cwd=settings.base_dir`, which on a native install resolves to the data dir (e.g. `/opt/bambuddy/data`), not the source-code dir; pip doesn't walk up like git does. New `settings.app_dir` points at the source tree, and the pip + npm steps now run from there. Docker is unaffected (it doesn't use the in-app updater).
-- **Postgres restore from a SQLite Local Backup aborted with `cannot drop table printers`** — Settings → Backup → Restore on a Bambuddy running against external Postgres failed when the live database held orphan tables from removed features (e.g. legacy `spoolman_slot_assignments` / `spoolman_k_profile` whose `*_printer_id_fkey` constraints still pointed at `printers`). The restore path now uses `DROP TABLE … CASCADE` on every public-schema table before recreating from the ORM metadata, so orphan tables and their constraints get cleaned up alongside the ORM schema instead of blocking the restore. SQLite restores are unaffected.
-- **H2D Pro multi-plate dispatch double-/triple-fire** ([#1157](https://github.com/maziggy/bambuddy/issues/1157)) — A post-dispatch hold prevents the scheduler from re-dispatching the same plate when H2D Pro firmware takes longer than expected to acknowledge.
-- **OIDC `auto_link_existing_accounts` now works with custom email claims (Azure Entra ID)** ([#1142](https://github.com/maziggy/bambuddy/issues/1142), contributed by @netscout2001) — Auto-linking of existing Bambuddy accounts now respects the configured `email_claim` instead of defaulting to `email`.
-- **P1P print dispatch failed with `0500_4003 "can't parse print file"` when the printer was slow to acknowledge** ([#1150](https://github.com/maziggy/bambuddy/issues/1150), reported by @d3ni3) — Watchdog no longer reconnects MQTT mid-dispatch when the project file is already on the printer.
-- **3MF profile-driven slicing silently produced wrong-printer output** — Every 3MF slice was falling back to the source's embedded printer regardless of the picked profile, because the CLI's `--load-settings` parser silently rejected the supplied JSON when the `type` field was missing. Now correct.
-- **Auto-Print G-code Injection: start snippet landed before printer startup, and `{placeholder}` substitution was silently broken** ([#422](https://github.com/maziggy/bambuddy/issues/422) follow-up) — Start snippet now runs after the printer is ready; placeholders substitute correctly.
-- **Reprint-from-archive failed with `0500_4003` SD R/W errors after a stuck dispatch, fixable only by restarting the container** ([#1136](https://github.com/maziggy/bambuddy/issues/1136)) — MQTT state cleanup correctly clears the stuck-dispatch marker.
-- **Background-dispatch reported "Print started successfully" when the printer never actually transitioned** ([#1134](https://github.com/maziggy/bambuddy/issues/1134), follow-up to [#1042](https://github.com/maziggy/bambuddy/issues/1042)) — Watchdog now propagates a timeout as a failed dispatch instead of falsely reporting success.
-- **User-cancelled prints surfaced as "1 problem" on the printer card AND were archived as "Layer shift" failures** — Cancellation is now correctly distinguished from a real failure.
-- **Camera stream second viewer fails / kicks the first off** ([#1089](https://github.com/maziggy/bambuddy/issues/1089)) — Multiple simultaneous camera viewers are now fanned out from a single upstream connection.
-- **Bambu RFID auto-match created duplicate inventory rows for Quick-Add and non-Bambu-branded spools** ([#918](https://github.com/maziggy/bambuddy/issues/918)) — Auto-match now correctly handles Quick-Add spools and rejects non-Bambu brands.
-- **Project picker UX in archives** ([#1151](https://github.com/maziggy/bambuddy/issues/1151)) — Scroll, sort, and search now work in the project-picker dropdown.
-- **Uploads to writable external folders silently landed in internal storage** ([#1112](https://github.com/maziggy/bambuddy/issues/1112)) — Cross-boundary file move actually relocates bytes to the mounted folder.
-- **Queue: batch (quantity > 1) double-dispatched onto the same printer** — A whole-batch lock prevents double-dispatch when the queue picks an ASAP batch.
-- **Queue item stuck at "printing" when print failed before reaching RUNNING** ([#1111](https://github.com/maziggy/bambuddy/issues/1111)) — Pre-RUNNING failures now correctly advance the queue item.
-- **Queue: active-item progress bar flashed 100 % before dropping to 0 %** — Progress bar resets cleanly between batch items.
-- **H2C dual-nozzle detection missed post-2026 serial batches** ([#1105](https://github.com/maziggy/bambuddy/issues/1105)) — Newer H2C units are now correctly detected as dual-nozzle.
-- **Spoolman iframe silently blank on HTTPS Bambuddy with HTTP Spoolman** ([#1096](https://github.com/maziggy/bambuddy/issues/1096)) — CSP allows mixed-content iframes for self-hosted LAN Spoolman instances.
-- **Reprint-from-Archive left `created_by_id` as `NULL`** ([#730](https://github.com/maziggy/bambuddy/issues/730) follow-up) — Reprints are now correctly attributed.
-- **Plate-clear button stayed visible after the API cleared `awaiting_plate_clear` outside the printer-card click path** ([#1128](https://github.com/maziggy/bambuddy/issues/1128)) — WebSocket broadcasts the flag flip end-to-end.
-- **"Open in Slicer" fails on Windows / Linux for any filename containing spaces or special characters** ([#1059](https://github.com/maziggy/bambuddy/issues/1059)) — Filenames are now correctly URL-encoded in the slicer protocol handler.
-- **Camera page ignored `?fps=N` URL parameter** ([#1131](https://github.com/maziggy/bambuddy/issues/1131) diagnostic) — FPS override now honoured on `/camera/<id>`.
-- **Spool auto-assign hit `IntegrityError` on Postgres when AMS pushes arrived in quick succession** — Auto-assign now serialises per printer.
-- **Tailscale cert-renewal restart silently failed mid-way** (follow-up to [#1070](https://github.com/maziggy/bambuddy/issues/1070)) — Renewal restart sequence is now atomic.
-- **Settings table filled with duplicate rows on legacy SQLite installs** — Idempotent migration de-duplicates on startup.
-- **Install script failed for first-time users** — First-run path now correctly initialises the venv and database.
-- **`bambuddy.log` filling with `WinError 10054` / `Exception terminating connection ... CancelledError` cascades** ([#1112](https://github.com/maziggy/bambuddy/issues/1112) follow-up, surfaced by @Carter3DP's support package) — Cancel-safe `get_db` plus silenced Windows asyncio Proactor cleanup-RST noise.
-- **Settings: failed-save toast looped forever when the user lacked `settings:update`** — Permission-denied responses now break the retry loop.
-- **Groups: edits to custom-group permissions appeared lost on reopen** ([#1083](https://github.com/maziggy/bambuddy/issues/1083)) — Custom-group permissions persist across modal reopens.
-- **Setup: re-enabling auth could 422 on a password the form no longer needs** — Re-enable flow no longer requires the field it just hid.
+  - **API keys can read Bambu Cloud presets on the owner's behalf** ([#1182](https://github.com/maziggy/bambuddy/issues/1182), reported by @turulix) — Headless slicing pipelines hit a wall: the auth gate returned `None` for API-keyed requests, so `/cloud/*` routes always saw `user=None` and resolved an empty token. API keys now carry a `user_id` (FK to the creator) and a new opt-in `can_access_cloud` scope; cloud routes resolve the cloud token via the key's owner. Legacy ownerless keys keep working against every non-cloud route.
+    
+  - **Home Assistant addon detection — Settings → Updates and the in-app update banner now defer to the HA Supervisor** ([#1167](https://github.com/maziggy/bambuddy/issues/1167)) — Bambuddy on HA Supervisor used to show its own update controls alongside the addon's, leading users to "update Bambuddy" inside the app, then have HA roll it back to whatever version
+   the addon shipped. The Updates page and update banner now detect the HA addon environment via `/data/options.json` + `SUPERVISOR_TOKEN` and surface "Update via Home Assistant" instead, with a deep link into the HA addon panel. Native and Docker-Compose deployments are unaffected.
 
-**Security**
+  - **OIDC auto-created users now get readable usernames and land in a configurable group** ([#1173](https://github.com/maziggy/bambuddy/issues/1173), via [#1176](https://github.com/maziggy/bambuddy/pull/1176)) — Auto-created OIDC users were getting the raw `sub` claim as their username (a long opaque GUID on Azure / Google), and were defaulting to the most-permissive group available. Now the username comes from `preferred_username` / `name` / `email` (with a configurable claim) and the default group is settable per OIDC provider so SSO logins can drop straight into Operators or Viewers instead of Administrators.
 
-- **postcss bumped to 8.5.12 to clear GHSA-qx2v-qp2m-jg93** — Transitive dev-dependency advisory; no runtime impact for users on a published image.
+  - **Filament Track Switch (FTS) support** ([#1162](https://github.com/maziggy/bambuddy/issues/1162)) — H2D / X2D printers with the FTS accessory installed used to render an empty filament dropdown in the print modal because the routing extension wasn't recognised. The print modal now correctly enumerates FTS sources alongside AMS slots, and a debug log records the slicer-launched `project_file` payload for routing diagnostics in case future FTS configurations surface new edge cases.
 
-**Contributors**
+  - **External-camera snapshot URL override** ([#1177](https://github.com/maziggy/bambuddy/issues/1177)) — go2rtc, Frigate, and similar reverse-proxied camera setups can now expose a separate snapshot URL distinct from the live stream URL — useful for thumbnailing, archives, and the Cameras page where pulling an MJPEG keyframe is overkill.
 
-Thank you to the contributors who helped make this release possible:
+  - **iframe embedding from trusted origins via `TRUSTED_FRAME_ORIGINS`** ([#1191](https://github.com/maziggy/bambuddy/issues/1191), reported by @azurusnova) — Anti-clickjacking defaults (`X-Frame-Options: SAMEORIGIN`, CSP `frame-ancestors 'none'`) blocked legitimate Home Assistant Webpage panel embeds even on same-LAN setups. New `TRUSTED_FRAME_ORIGINS` env var takes a comma-separated list of `scheme://host[:port]` origins; when set, the middleware drops the legacy `X-Frame-Options` header and the CSP `frame-ancestors` directive becomes `'self' <origin>...`. Default empty keeps the strict behaviour.
 
-- @netscout2001 — OIDC Azure Entra ID support, configurable email claim & verification, Remember Me ([#1126](https://github.com/maziggy/bambuddy/issues/1126), [#1142](https://github.com/maziggy/bambuddy/issues/1142))
-- @legend813 — Tailscale opt-out toggle for virtual printers ([#1070](https://github.com/maziggy/bambuddy/issues/1070))
+  - **Backup destinations beyond GitHub** ([#1160](https://github.com/maziggy/bambuddy/pull/1160)) — Settings → Backup → Git providers now supports GitLab, Gitea, and Bitbucket alongside GitHub. Same auth/token flow, same scheduled-backup pipeline.
+
+  **Improved**
+
+  - **Multi-colour filament rendering: Extra Colours hydrate on edit, Dual Color renders as hard-split bars, Sparkle/checkerboard visuals are more visible** ([#1154](https://github.com/maziggy/bambuddy/issues/1154) follow-up, reported by @maugsburger) — Four bugs against the original multi-colour work in b1: the Spool edit form lost the Extra Colours value when reopened (form initialised from a different state branch than the new field), Dual Color rendered identically to Gradient (the special-case stops weren't being detected), and Sparkle / checkerboard layers were too subtle on light backgrounds. All fixed; PR also adds a deterministic seeded PRNG (`utils/random.ts`) so visual variation is stable per spool key.
+
+  - **Project cover-photo hover preview** ([#1155](https://github.com/maziggy/bambuddy/issues/1155) follow-up, reported by @smandon) — The 40×40 thumbnail wasn't readable for "is this the right model?" recognition; enlarging it would have shifted the dense grid layout the user chose. Hovering a card now mounts a 384×384 portal popover with the full cover image
+  (`object-contain` so portrait shots aren't cropped), edge-flipping when the thumbnail is near the viewport's right side.
+
+  - **Pending review card and the resulting archive name agree** ([#1152](https://github.com/maziggy/bambuddy/issues/1152)) — When the VP archive-naming source toggle was set to use the embedded 3MF metadata title, the resulting archive name kept the trailing `.gcode.3mf` suffix while the pending-review card stripped it, so the two views disagreed. Stripping is now consistent.
+
+  - **Permission gating for MakerWorld nav entry** ([#1175](https://github.com/maziggy/bambuddy/issues/1175)) — The MakerWorld sidebar entry was visible to every user regardless of group permissions, even though the routes themselves were correctly gated. Sidebar now hides when the user lacks `makerworld:view`.
+
+  - **Printer Info modal: copy buttons work on plain HTTP** ([#1174](https://github.com/maziggy/bambuddy/issues/1174)) — `navigator.clipboard.writeText` requires HTTPS or `localhost`; on plain-HTTP LAN deployments the serial-number and IP-address copy buttons silently failed. Now falls back to the legacy `document.execCommand('copy')` path so copying works regardless of context.
+
+  - **MQTT inflight ceiling raised to prevent QoS=1 session wedge** ([#1164](https://github.com/maziggy/bambuddy/issues/1164), diagnosis credit @RosdasHH for the QoS=1/0/2 bisect) — paho's default 20-message inflight ceiling was getting filled by chatty AMS slot config sequences, leaving the session wedged until reconnect. Lifted to a higher value plus an `ams_filament_setting` response counter reset that was missing from the unanswered-counter logic.
+
+  **Changed**
+
+  - **Virtual Printer Tailscale toggle no longer provisions Let's Encrypt certs — it's now informational** — End-to-end testing confirmed the original premise was wrong: BambuStudio and OrcaSlicer both refuse hostname input in the Add Printer dialog (IP-only), and their printer-MQTT trust path validates only against the bundled BBL CA store (`printer.cer`), not the system trust store. LE-issued certs don't chain to BBL CA, so the slicer rejects with the well-known "-1" before any hostname/IP logic runs. The Tailscale toggle is kept (it's still useful for surfacing the FQDN + private WireGuard reach without port-forwarding) but the cert-provisioning machinery (renewal task, daily restart, on-disk LE files per VP) is gone. The `tailscale_disabled` DB column is preserved as the persisted toggle state. CA import into the slicer is unchanged. Wiki, README, and i18n copy across all 8 locales updated to drop the "no cert import needed" framing.
+
+  **Fixed**
+
+  - **Backup restore silently lost most data** ([#1211](https://github.com/maziggy/bambuddy/issues/1211), reported by @Carter3DP; same shape as previously-closed [#668](https://github.com/maziggy/bambuddy/issues/668)) — Restoring a backup ZIP appeared successful but the user found settings reverted to defaults and most printers / archive rows missing. Cause: SQLite WAL state from the fresh container start was being silently re-applied on top of the restored DB. The original code used `shutil.copy2` after
+  `engine.dispose()` — neither of which checkpoints the WAL, and SQLAlchemy's dispose() doesn't close checked-out connections (the route handler's own `db: Depends(get_db)` is one). On the next open SQLite re-applied the stale frames over the restored content, partially clobbering it with fresh-install state. Fixed by replacing the file copy with SQLite's online backup API (`src.backup(dst)`), which understands WAL semantics and routes new pages through the destination's own WAL. Pinned with 6 regression tests including one that asserts the bug *manifests* under the un-checkpointed-WAL condition so a future "small simplification" can't silently re-introduce file-copy semantics. PostgreSQL path was already row-by-row and is unchanged.
+
+  - **Archive 3MFs (and library file bytes) silently deleted from disk on every print completion** ([#1212](https://github.com/maziggy/bambuddy/issues/1212), reported by @abbasegbeyemi) — Reprint and View G-code on a freshly-completed archive returned 404 with no log line; the DB row was intact, the archive grid kept showing the entry, but `archive.file_path` pointed at a path that no longer existed on disk. Same shape independently reported by a daily-build user whose `.gcode.3mf` "disappeared by itself overnight" between Saturday's print and Monday morning's reprint attempt. Cause was a regression introduced by [#1166](https://github.com/maziggy/bambuddy/issues/1166)'s cover-cache pre-population: dispatch sites started caching the live archive copy in the shared 3MF download cache, but `clear_3mf_cache(printer_id, delete_files=True)` — called from `on_print_complete` to keep the temp dir from accumulating — happily `unlink()`'d every cached path. Pre-#1166 every cached path was a temp file and deletion was correct; post-#1166 the cleanup was destroying user data. Cache cleanup now refuses to delete any path outside `archive_dir/temp`. Affected daily builds since `889c8bd8` (Apr 29) — recovery is to re-import the source 3mf or re-archive from FTP.
+
+  - **MakerWorld P2S 3MFs failed to slice with "Param values in 3mf/config error: -1 not in range"** ([#1201](https://github.com/maziggy/bambuddy/issues/1201), reported by @inorichi) — Slicing any MakerWorld model sliced for the P2S bombed with `Slicer process failed (exit code 238)`. Cause: BambuStudio writes `"-1"` into `Metadata/project_settings.config` for fields the user wants inherited from the parent process preset. The headless CLI runs `StaticPrintConfig`'s range validator against the embedded settings *before* `--load-settings` overrides apply, so the sentinel `"-1"` trips the field's lower-bound check. New   _sanitize_project_settings_sentinels` opens the embedded config and removes only allowlisted keys 
+  (`raft_first_layer_expansion`, `tree_support_wall_count`, `prime_tower_brim_width`) when their value is exactly `"-1"`. Other fields and legitimate negative values are left untouched.
+
+  - **Archive created with wrong plate metadata when consecutive plates of the same model are printed back-to-back** ([#1204](https://github.com/maziggy/bambuddy/issues/1204), reported by @BurntOutHylian) — Print Plate 2 of any multi-plate project, let it complete, then immediately print Plate 1: the resulting archive was named "MyModel - Plate 2" with Plate 2's filament slots and slicer estimate, even though Plate 1 was the print actually running. Cause was an MQTT lag in the `print_start` data: the trigger fires on `gcode_file` (plate-specific, always fresh) but `subtask_name` (model-level) can still echo the previous job. Fix cross-references the downloaded 3MF's plate index against the parsed gcode_file plate, and on mismatch retries the FTP fetch with a corrected name.
+
+  - **Print-complete notification reported the slicer's pre-print estimate instead of actual elapsed time** ([#1198](https://github.com/maziggy/bambuddy/issues/1198), reported by @BurntOutHylian) — `{{duration}}` template variable was being filled from `print_time_seconds` (the slicer's estimate) — a 2-minute cancellation of a 3-hour estimate told the user "duration: 3h". Now computes `actual_time_seconds` from `(completed_at - started_at)` and prefers it. Also fixes the related case where `cancelled` prints didn't get a `completed_at` timestamp (only `completed/failed/aborted` did).
+
+  - **Frontend served behind a path-prefixed reverse proxy loaded a blank page** ([#1195](https://github.com/maziggy/bambuddy/issues/1195), reported by @Spegeli) — Vite's default `base: '/'` emits absolute asset URLs in the built `index.html`, so deployments behind Traefik / nginx / Cloudflare Tunnel with a path prefix would 404 on every asset. Switched to `base: ''` so Vite emits relative paths; the SPA now loads correctly under any subpath. Note: API base remains absolute by design — full subpath-aware  bootstrapping is still out of scope for HA Ingress.
+
+  - **Virtual Printer queue mode auto-dispatched onto the wrong colour when multiple compatible printers were available** ([#1188](https://github.com/maziggy/bambuddy/issues/1188), reported by @EdwardChamberlain) — A job sliced for matte white PLA would land on a printer with no white loaded. Cause: the VP queue-write path skipped extracting per-slot filament requirements from the 3MF, so the scheduler fell back to model-only matching. Now extracts requirements at queue-add time. New per-VP `queue_force_color_match` setting (default off for upgrade safety) — flip it on to require colour matching for queue dispatch.
+
+  - **Slicing a library file via API key fails with "no Bambu Cloud session is stored"** ([#1182](https://github.com/maziggy/bambuddy/issues/1182) follow-up, reported by @turulix) — After the `/cloud/*` gate from the main #1182 fix, the slice route still failed because it lives on `/library/*` and didn't see the API key's owner. New permissive route-level dep `resolve_api_key_cloud_owner` wired into `POST /library/files/{id}/slice` and `GET /slicer/presets` so cloud-token resolution works end-to-end for API-keyed requests with the cloud scope.
+
+  - **Project cover photo thumbnail too small to recognise the print** ([#1155](https://github.com/maziggy/bambuddy/issues/1155) follow-up, reported by @smandon) — See *Improved* section above.
+
+  - **SpoolBuddy kiosk screen-blank timeout setting was ignored after the first save** (reported by maziggy) — Picking a new "Screen Blank Timeout" in SpoolBuddy Settings → Display didn't change actual behaviour. Cause: blanking is driven by `swayidle`, started once at autostart with the timeout as a command-line argument. The Python daemon's `set_blank_timeout()` updated an in-memory variable that never reached `swayidle`. Fix extends the wake FIFO protocol with a `reload-timeout N` line; the watchdog kills and restarts swayidle when it sees one. Changes apply live — no kiosk restart required.
+
+  - **SpoolBuddy kiosk screen never blanked while a load cell was producing noisy readings** — A noisy HX711 / load-cell mount that bounced the reported weight by ≥50 g around its midpoint kept the kiosk display permanently lit because every bounce fired `display.wake()`. Wake gate now requires the scale's `stable=True` flag (consecutive readings agree within 2 g over 1 s).
+
+  - **SpoolBuddy SSH update fails with "permission denied for user spoolbuddy" after Bambuddy keypair rotation** — When Bambuddy rotates its SSH key, kiosks installed before the rotation are stuck on the old public key. Fix: the daemon now syncs the current public key over heartbeat and re-deploys it on the kiosk if it differs from what's currently in `authorized_keys`.
+
+  - **External-camera frames returned as black on go2rtc and other MJPEG sources** ([#1177](https://github.com/maziggy/bambuddy/issues/1177)) — Some MJPEG sources emit a "warm-up" first frame that's all-black; we now skip it and return the second frame.
+
+  - **Queue auto-dispatched the next print onto a fouled bed after an aborted or cancelled print** ([#1171](https://github.com/maziggy/bambuddy/issues/1171)) — The plate-clear gate was only raising for `failed/completed`; `aborted` and `cancelled` are also terminal states that need a clear before the next dispatch.
+
+  - **Printer card always shows the first plate's thumbnail when printing a multi-plate 3MF** ([#1166](https://github.com/maziggy/bambuddy/issues/1166)) — Now resolves the actual plate index from `gcode_file` and pulls the matching thumbnail.
+
+  - **AMS slot configuration intermittently fails to reach the printer after several configs in a row** ([#1164](https://github.com/maziggy/bambuddy/issues/1164)) — See *Improved* section above (paho inflight ceiling).
+
+  - **`formatTimeOnly` tests failed under non-`:`-separator locales** ([#1213](https://github.com/maziggy/bambuddy/issues/1213), reported by @maugsburger) — `toLocaleTimeString` returns `02.30 pm` on `en_DK.UTF-8` and similar locales, so the hard-coded `:` in the test assertions broke contributor test runs. Switched to `\D+` (any non-digit) so the regex accepts any locale separator.
+
+  ---
+
+  **Contributors**
+
+  Thank you to the contributors who helped make this release possible:
+
+  - @Keybored02 — Forecast & Reorder Intelligence ([#1184](https://github.com/maziggy/bambuddy/pull/1184))
+  - @netscout2001 — OIDC auto-created username + group claim handling ([#1173](https://github.com/maziggy/bambuddy/issues/1173) via [#1176](https://github.com/maziggy/bambuddy/pull/1176))
+  - @maugsburger — Multi-colour filament fixes ([#1154](https://github.com/maziggy/bambuddy/issues/1154) follow-up), locale-agnostic test fix ([#1213](https://github.com/maziggy/bambuddy/issues/1213))
+  - @EdwardChamberlain — Virtual Printer queue colour-match fix ([#1188](https://github.com/maziggy/bambuddy/issues/1188))
 
