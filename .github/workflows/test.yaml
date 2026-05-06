@@ -8,38 +8,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get beta tag info from ghcr.io
+      - name: Check if beta tag exists
         run: |
           TOKEN=$(curl -s "https://ghcr.io/token?scope=repository:maziggy/bambuddy:pull" \
             | jq -r '.token')
 
-          echo "=== DIGEST VON :beta ==="
-          BETA_DIGEST=$(curl -sI -H "Authorization: Bearer $TOKEN" \
-            -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+          echo "=== HTTP STATUS :beta ==="
+          curl -sI -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/vnd.docker.distribution.manifest.list.v2+json" \
             "https://ghcr.io/v2/maziggy/bambuddy/manifests/beta" \
-            | grep -i "docker-content-digest" | tr -d '\r' | awk '{print $2}')
-          echo "Beta Digest: $BETA_DIGEST"
+            | head -5
 
           echo ""
-          echo "=== ALLE TAGS DIE DENSELBEN DIGEST HABEN ==="
-          TAGS=$(curl -s -H "Authorization: Bearer $TOKEN" \
-            "https://ghcr.io/v2/maziggy/bambuddy/tags/list" \
-            | jq -r '.tags[]')
-
-          for TAG in $TAGS; do
-            TAG_DIGEST=$(curl -sI -H "Authorization: Bearer $TOKEN" \
-              -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
-              -H "Accept: application/vnd.docker.distribution.manifest.list.v2+json" \
-              "https://ghcr.io/v2/maziggy/bambuddy/manifests/$TAG" \
-              | grep -i "docker-content-digest" | tr -d '\r' | awk '{print $2}')
-            if [ "$TAG_DIGEST" = "$BETA_DIGEST" ]; then
-              echo "✅ $TAG"
-            fi
-          done
+          echo "=== DIGEST :beta ==="
+          curl -sI -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.docker.distribution.manifest.list.v2+json" \
+            "https://ghcr.io/v2/maziggy/bambuddy/manifests/beta" \
+            | grep -i "docker-content-digest"
 
           echo ""
-          echo "=== LETZTE 5 TAGS AUF GHCR.IO ==="
-          curl -s -H "Authorization: Bearer $TOKEN" \
-            "https://ghcr.io/v2/maziggy/bambuddy/tags/list" \
-            | jq -r '.tags[]' | tail -5
+          echo "=== DIGEST :latest ZUM VERGLEICH ==="
+          curl -sI -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.docker.distribution.manifest.list.v2+json" \
+            "https://ghcr.io/v2/maziggy/bambuddy/manifests/latest" \
+            | grep -i "docker-content-digest"
