@@ -2,6 +2,7 @@
 name: Bambuddy (Daily)
 version: "0.2.4b3-daily.20260506"
 slug: bambuddy_daily
+stage: experimental
 description: Bambuddy is a powerful, self-hosted print archive and management system for Bambu Lab 3D printers.
 url: "https://github.com/Spegeli/homeassistant-app-bambuddy"
 arch:
