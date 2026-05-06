@@ -18,7 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.2.2
 
-      - name: Get latest daily digest from ghcr.io
+      - name: Get latest daily digest and version
         id: get_digest
         run: |
           TOKEN=$(curl -s "https://ghcr.io/token?scope=repository:maziggy/bambuddy:pull" \
@@ -36,11 +36,19 @@ jobs:
           fi
 
           SHORT=$(echo "$DIGEST" | cut -c8-15)
-          DATE=$(date +%Y.%m.%d)
-          NEW_VERSION="${DATE}-${SHORT}"
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+          RELEASE_TAG=$(curl -s "https://api.github.com/repos/maziggy/bambuddy/releases?per_page=10" \
+            | jq -r '[.[] | select(.prerelease == true)] | first | .tag_name' | sed 's/^v//')
+
+          if [ -z "$RELEASE_TAG" ]; then
+            DATE=$(date +%Y.%m.%d)
+            RELEASE_TAG="${DATE}-${SHORT}"
+          fi
+
           echo "short=$SHORT" >> $GITHUB_OUTPUT
-          echo "Neue Version: $NEW_VERSION"
+          echo "version=$RELEASE_TAG" >> $GITHUB_OUTPUT
+          echo "Digest SHA: $SHORT"
+          echo "Version: $RELEASE_TAG"
 
       - name: Get daily changelog from GitHub Releases
         id: get_changelog
@@ -56,7 +64,14 @@ jobs:
         id: get_current
         run: |
           CURRENT=$(grep '^version:' bambuddy-daily/config.yaml | sed 's/.*"\(.*\)"/\1/')
-          CURRENT_SHORT=$(echo "$CURRENT" | cut -d'-' -f2)
+          TOKEN=$(curl -s "https://ghcr.io/token?scope=repository:maziggy/bambuddy:pull" \
+            | jq -r '.token')
+          CURRENT_DIGEST=$(curl -sI -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+            -H "Accept: application/vnd.docker.distribution.manifest.list.v2+json" \
+            "https://ghcr.io/v2/maziggy/bambuddy/manifests/daily" \
+            | grep -i "docker-content-digest" | tr -d '\r' | awk '{print $2}')
+          CURRENT_SHORT=$(echo "$CURRENT_DIGEST" | cut -c8-15)
           echo "current=$CURRENT" >> $GITHUB_OUTPUT
           echo "current_short=$CURRENT_SHORT" >> $GITHUB_OUTPUT
           echo "Aktuelle Version: $CURRENT (SHA: $CURRENT_SHORT)"
