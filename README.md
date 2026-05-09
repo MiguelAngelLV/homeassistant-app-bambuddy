@@ -66,13 +66,11 @@ All BamBuddy data (print archive, settings, logs) is stored persistently in the 
  
 ### HA Ingress — Not Supported
  
-HA Ingress is currently **not supported**.
- 
-**Why:** Bambuddy's frontend SPA makes API calls to an absolute path (`/api/v1/...`). HA Ingress serves the addon under a rotating per-session subpath (`/api/hassio_ingress/<token>/`), which means API calls never reach Bambuddy. This requires a fix in Bambuddy core.
+HA Ingress is currently **not supported** and is not planned. Bambuddy's SPA architecture relies on a stable origin for API calls, routing, PWA scope, and service workers — all of which are incompatible with HA Ingress's rotating per-session subpaths. This would require extensive rewrites to Bambuddy core.
  
 ---
  
-### Embedding via Webpage Panel — LAN only
+### Embedding via Webpage Panel
  
 As a workaround, Bambuddy can be embedded inside the Home Assistant dashboard using a **Webpage Panel** or **Webpage Card**:
  
@@ -93,7 +91,7 @@ As a workaround, Bambuddy can be embedded inside the Home Assistant dashboard us
 - Works on **LAN only** — not available when accessing HA remotely via HTTPS (Nabu Casa, custom domain, etc.)
 - When accessing HA over HTTPS externally, browsers block HTTP iframes (mixed content policy)
  
-Full Ingress support will be added once the upstream API path issue is resolved.
+
 
 ---
 
