@@ -16,7 +16,7 @@ Enables verbose debug logging for Bambuddy. Useful when troubleshooting issues o
 
 ## Data Persistence
 
-All data (print archive, settings, logs) is stored persistently in the Home Assistant `/data` directory. Your data is safe across updates, restarts, and reinstalls.
+All data (print archive, settings, logs) is stored persistently in the Home Assistant `/data` directory. Your data is safe across updates and restarts. When uninstalling, Home Assistant will ask whether to remove the app data as well — if you keep it, your data will still be there after a reinstall.
 
 ---
 
