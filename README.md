@@ -13,6 +13,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/aarch64-yes-green.svg">
   <img src="https://img.shields.io/badge/amd64-yes-green.svg">
+  <img src="https://img.shields.io/github/v/release/maziggy/bambuddy?label=stable&color=blue">
+  <img src="https://img.shields.io/github/v/release/maziggy/bambuddy?include_prereleases&label=beta&color=orange">
 </p>
 
 ---
@@ -51,6 +53,12 @@ No manual intervention required. 🎉
 
 ---
 
+## 💾 Data Persistence
+
+All BamBuddy data (print archive, settings, logs) is stored persistently in the Home Assistant `/data` directory. Your data is **safe across updates, restarts, and reinstalls** — uninstalling and reinstalling the App will not cause any data loss.
+
+---
+
 ## ⚠️ Known Limitations
  
 ### HA Ingress — Not Supported
@@ -86,7 +94,7 @@ Full Ingress support will be added once the upstream API path issue is resolved.
 
 ---
 
-## ⚠️ Disclaimer
+## ℹ️ Disclaimer
  
 This is **not** an official release by the BamBuddy developer. This project simply packages [BamBuddy](https://github.com/maziggy/bambuddy) as a native Home Assistant App for easy installation and updates.
  
