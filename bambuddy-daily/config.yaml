@@ -9,6 +9,7 @@ arch:
   - aarch64
   - amd64
 init: false
+host_network: true
 hassio_role: homeassistant
 privileged:
   - NET_RAW
@@ -23,9 +24,5 @@ schema:
   debug: bool
 environment:
   TRUSTED_FRAME_ORIGINS: "{{trusted_frame_origins}}"
-ports:
-  8000/tcp: 8000
-ports_description:
-  8000/tcp: "HTTP Web Interface"
-webui: http://[HOST]:[PORT:8000]
-watchdog: http://[HOST]:[PORT:8000]/health
+webui: http://[HOST]:8000
+watchdog: http://[HOST]:8000/health
