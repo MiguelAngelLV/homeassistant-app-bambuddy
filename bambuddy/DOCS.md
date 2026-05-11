@@ -62,7 +62,7 @@ To allow your slicer (Bambu Studio / OrcaSlicer) to trust the Virtual Printer's 
 **1. Locate the certificate in Home Assistant**
 
 Open the **File Editor** and navigate to:
-`addon_configs` → `[slug]_bambuddy_daily` → `data` → `virtual_printer` → `certs` → `bbl_ca.crt`
+`addon_configs` → `[slug]_bambuddy` → `data` → `virtual_printer` → `certs` → `bbl_ca.crt`
 
 Copy the entire contents of this file (from `-----BEGIN CERTIFICATE-----` to `-----END CERTIFICATE-----`).
 
