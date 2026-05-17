@@ -70,7 +70,7 @@ No manual intervention required. 🎉
 
 ## 💾 Data Persistence
 
-All BamBuddy data (print archive, settings, logs) is stored persistently in the Home Assistant `/data` directory. Your data is **safe across updates and restarts**. When uninstalling, Home Assistant will ask whether to remove the app data as well — if you keep it, your data will still be there after a reinstall.
+All data (print archive, settings, logs) is stored persistently in the `addon_configs` directory, which is accessible via the **File Editor** in Home Assistant. Your data is safe across updates and restarts. When uninstalling, Home Assistant will ask whether to remove the app data as well — if you keep it, your data will still be there after a reinstall.
 
 ---
 
