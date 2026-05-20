@@ -12,6 +12,7 @@ WORKDIR /app
 # Install system dependencies
 RUN apk add --no-cache \
   build-base \
+  ca-certificates \
   py3-opencv \
   curl \
   ffmpeg

@@ -25,6 +25,30 @@ Add every origin from which you access Home Assistant. If you access HA from mul
 
 ---
 
+### Self-Signed CA Certificate
+
+If your Home Assistant instance uses a self-signed certificate (or a certificate signed by a private CA), BamBuddy will deny the HTTPS connection by default. This option lets you provide your own CA certificate so that BamBuddy can trust it.
+
+| Option | Type | Default |
+|--------|------|---------|
+| `use_system_trust_store` | `bool` | `false` |
+| `certfile` | `str` | `custom_ca.crt` |
+
+**Steps:**
+
+1. Export your CA certificate as a `.crt` file (PEM format — the public CA certificate only, no private key).
+2. Open the **File Editor** in Home Assistant and navigate to:  
+   `addon_configs` → `[slug]_bambuddy_beta`
+3. Upload or create the certificate file there (e.g., `custom_ca.crt`).
+4. In the add-on configuration, enable **Use System Trust Store** and set **CA Certificate Filename** to the filename you used in step 3.
+5. Restart the add-on.
+
+> **Note:** Only the CA certificate (public part) is required — not `fullchain.pem` and not a private key file.
+
+> **Note:** If the certificate file is not found at startup, BamBuddy will log a warning and start anyway — without the custom CA. Check the add-on log if HTTPS connections to your HA instance fail.
+
+---
+
 ### Debug Mode
 
 Enables verbose debug logging for Bambuddy. Useful when troubleshooting issues or reporting bugs.

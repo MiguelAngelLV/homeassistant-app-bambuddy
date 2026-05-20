@@ -19,10 +19,14 @@ map:
 options:
   trusted_frame_origins:
     - "http://homeassistant.local:8123"
+  use_system_trust_store: false
+  certfile: "custom_ca.crt"
   debug: false
 schema:
   trusted_frame_origins:
     - str
+  use_system_trust_store: bool
+  certfile: str
   debug: bool
 environment:
   TRUSTED_FRAME_ORIGINS: "{{trusted_frame_origins}}"

@@ -35,5 +35,21 @@ if bashio::config.exists 'trusted_frame_origins'; then
   fi
 fi
 
+# Self-signed CA certificate support
+if bashio::config.true 'use_system_trust_store'; then
+  CERTFILE=$(bashio::config 'certfile')
+  CERT_SRC="/config/${CERTFILE}"
+  if [ -n "${CERTFILE}" ] && [ -f "${CERT_SRC}" ]; then
+    bashio::log.info "Installing CA certificate: ${CERTFILE}"
+    cp "${CERT_SRC}" "/usr/local/share/ca-certificates/${CERTFILE}"
+    update-ca-certificates
+    export USE_SYSTEM_TRUST_STORE=true
+    bashio::log.info "System trust store enabled"
+  else
+    bashio::log.warning "use_system_trust_store is enabled but certificate file not found: ${CERT_SRC}"
+    bashio::log.warning "Place your CA certificate (.crt) in the addon_configs folder and set certfile to the correct filename"
+  fi
+fi
+
 bashio::log.info 'Start Bambuddy ...'
 uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --loop asyncio
