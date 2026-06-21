@@ -1,20 +1,20 @@
 <p align="center">
-  <img src="https://github.com/Spegeli/homeassistant-app-bambuddy/blob/main/logo.png?raw=true" alt="Bambuddy Logo" width="300">
+  <img src="https://github.com/miguelangellv/homeassistant-app-bambuddy/blob/main/logo.png?raw=true" alt="Bambuddy Logo" width="300">
 </p>
 
 # 🚀 Bambuddy – Home Assistant App
 
 <p align="center">
-  <a href="https://github.com/maziggy/bambuddy">Bambuddy</a>, delivered as a first-class Home Assistant App for easy installation and updates.
+  <a href="https://github.com/miguelangellv/bambuddy">Bambuddy Fork</a>, delivered as a first-class Home Assistant App for easy installation and updates.
 </p>
 <p align="center">
   <strong>Your printers. No cloud. Your rules.</strong><br>
   Self-hosted command center for Bambu Lab &mdash; from one A1 to a 40-printer farm.
 </p>
 <p align="center">
-  <img src="https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/Spegeli/homeassistant-app-bambuddy/main/bambuddy/config.yaml&query=$.version&label=stable&color=blue">
-  <img src="https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/Spegeli/homeassistant-app-bambuddy/main/bambuddy-beta/config.yaml&query=$.version&label=beta&color=orange">
-  <img src="https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/Spegeli/homeassistant-app-bambuddy/main/bambuddy-daily/config.yaml&query=$.version&label=daily&color=purple">
+  <img src="https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/miguelangellv/homeassistant-app-bambuddy/main/bambuddy/config.yaml&query=$.version&label=stable&color=blue">
+  <img src="https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/miguelangellv/homeassistant-app-bambuddy/main/bambuddy-beta/config.yaml&query=$.version&label=beta&color=orange">
+  <img src="https://img.shields.io/badge/dynamic/yaml?url=https://raw.githubusercontent.com/miguelangellv/homeassistant-app-bambuddy/main/bambuddy-daily/config.yaml&query=$.version&label=daily&color=purple">
 </p>
 <p align="center">
   <img src="https://img.shields.io/badge/aarch64-yes-green.svg">
@@ -36,13 +36,13 @@
 
 Click the button below to automatically add the repository to Home Assistant:
 
-[![Add Repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https://github.com/Spegeli/homeassistant-app-bambuddy)
+[![Add Repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https://github.com/miguelangellv/homeassistant-app-bambuddy)
 
 Or add it manually:
 
 1. In Home Assistant, go to **Settings → Apps → App Store**
 2. Click the three-dot menu → **Repositories**
-3. Add `https://github.com/Spegeli/homeassistant-app-bambuddy`
+3. Add `https://github.com/miguelangellv/homeassistant-app-bambuddy`
 
 ---
 
@@ -90,10 +90,10 @@ For a full list of affected ports and details, see the **Documentation** tab of 
 
 ## ℹ️ Disclaimer
  
-This is **not** an official release by the BamBuddy developer. This project simply packages [BamBuddy](https://github.com/maziggy/bambuddy) as a native Home Assistant App for easy installation and updates.
+This is **not** an official release by the BamBuddy developer. This project simply packages [BamBuddy](https://github.com/miguelangellv/bambuddy) as a native Home Assistant App for easy installation and updates.
  
 I am not affiliated with or the developer of BamBuddy itself — therefore I am unable to provide support for BamBuddy-related issues, bugs, or feature requests. For anything related to BamBuddy, please refer to the original project:
  
-👉 **[github.com/maziggy/bambuddy](https://github.com/maziggy/bambuddy)**
+👉 **[github.com/miguelangellv/bambuddy](https://github.com/miguelangellv/bambuddy)**
  
 Support provided here is limited to the **Home Assistant App packaging and its installation** only.
