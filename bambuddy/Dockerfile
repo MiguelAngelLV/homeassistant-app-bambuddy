@@ -1,7 +1,7 @@
 # https://developers.home-assistant.io/docs/add-ons/configuration#add-on-dockerfile
 ARG BAMBUDDY_VERSION=0.2.4.7-autoamsslot
 
-FROM ghcr.io/miguelangellv/bambuddy:${BAMBUDDY_VERSION} AS builder
+FROM ghcr.io/miguelangellv/bambuddy:v${BAMBUDDY_VERSION} AS builder
 FROM ghcr.io/home-assistant/base-python:3.14-alpine3.23
 
 LABEL org.opencontainers.image.title="Home Assistant Add-on: Bambuddy add-on (STABLE)"
